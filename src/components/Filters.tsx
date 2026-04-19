@@ -28,21 +28,31 @@ export function Filters({
 }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-1 px-1 snap-x">
-        {EVENTS.map((e) => (
-          <button
-            key={e}
-            type="button"
-            onClick={() => onChangeEvent(e)}
-            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap snap-start border ${
-              event === e
-                ? "bg-accent border-accent text-white"
-                : "bg-card border-card-border text-muted hover:text-foreground"
-            }`}
-          >
-            {e}
-          </button>
-        ))}
+      <div className="relative">
+        <select
+          value={event}
+          onChange={(e) => onChangeEvent(e.target.value as EventName)}
+          className="w-full appearance-none bg-card border border-card-border rounded-full pl-4 pr-10 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:border-accent"
+        >
+          {EVENTS.map((e) => (
+            <option key={e} value={e}>
+              {e}
+            </option>
+          ))}
+        </select>
+        <svg
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </div>
 
       <div className="flex gap-2 flex-wrap">
