@@ -1,98 +1,127 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { DataControls } from "@/components/DataControls";
-import { Filters } from "@/components/Filters";
-import { RankingsTable } from "@/components/RankingsTable";
-import {
-  athleteKey,
-  clearResults as clearStoredResults,
-  loadResults,
-  loadStarred,
-  saveResults,
-  saveStarred,
-} from "@/lib/storage";
-import type { Classification, EventName, Gender, RaceResult } from "@/lib/types";
+import Link from "next/link";
+import { useStore } from "@/lib/store";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardSection, Stat } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
+import { athletesFromResults } from "@/lib/athletes";
+import { pointsFor, runStreak, weeklyMiles } from "@/lib/gamification";
+import { formatTime } from "@/lib/time";
 
 export default function HomePage() {
-  const [results, setResults] = useState<RaceResult[]>([]);
-  const [starred, setStarred] = useState<Set<string>>(new Set());
-  const [event, setEvent] = useState<EventName>("1600m");
-  const [gender, setGender] = useState<Gender>("M");
-  const [classification, setClassification] = useState<Classification>("6A");
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setResults(loadResults());
-    setStarred(loadStarred());
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) saveResults(results);
-  }, [results, hydrated]);
-
-  useEffect(() => {
-    if (hydrated) saveStarred(starred);
-  }, [starred, hydrated]);
-
-  const starredCount = useMemo(() => {
-    const keys = new Set(results.map((r) => athleteKey(r.athleteName, r.school)));
-    return [...starred].filter((k) => keys.has(k)).length;
-  }, [results, starred]);
-
-  function handleLoad(next: RaceResult[], mode: "replace" | "append") {
-    setResults((prev) => (mode === "replace" ? next : [...prev, ...next]));
-  }
-
-  function handleClear() {
-    clearStoredResults();
-    setResults([]);
-  }
-
-  function toggleStar(key: string) {
-    setStarred((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  const { data } = useStore();
+  const athletes = athletesFromResults(data.results);
+  const starredAthletes = athletes.filter((a) => data.starred.includes(a.key));
+  const hasData = data.results.length > 0;
 
   return (
-    <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
-      <header className="flex items-baseline justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Running Stats, etc.</h1>
-          <p className="text-xs text-neutral-500">
-            Utah HS rankings · {results.length} results · {starredCount} starred
-          </p>
+    <>
+      <PageHeader
+        title="Running Stats"
+        subtitle={hasData ? `${athletes.length} athletes tracked` : "Get started"}
+      />
+
+      {!hasData && (
+        <Card className="flex flex-col gap-3">
+          <div className="text-sm">
+            Welcome! Upload a CSV of race results, load sample data, or star athletes to track them.
+          </div>
+          <div className="flex gap-2">
+            <Link href="/rankings">
+              <Button>Go to Rankings</Button>
+            </Link>
+            <Link href="/more">
+              <Button variant="secondary">Manage data</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      {starredAthletes.length > 0 && (
+        <CardSection title="Your Athletes">
+          <div className="flex flex-col gap-2">
+            {starredAthletes.map((a) => {
+              const pts = pointsFor(data, a.key);
+              const streak = runStreak(data.trainingLogs, a.key);
+              const miles = weeklyMiles(data.trainingLogs, a.key);
+              const bestEvent = Object.entries(a.bestTimes).sort(
+                ([, ta], [, tb]) => (ta ?? 0) - (tb ?? 0)
+              )[0];
+              return (
+                <Link key={a.key} href={`/athlete/${encodeURIComponent(a.key)}`}>
+                  <Card>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-warning">★</span>
+                          <span className="font-semibold truncate">{a.name}</span>
+                        </div>
+                        <div className="text-xs text-muted truncate">
+                          {a.school} · {a.classification} · {a.gender === "M" ? "Boys" : "Girls"}
+                        </div>
+                      </div>
+                      {bestEvent && (
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase text-muted tracking-wide">
+                            {bestEvent[0]} best
+                          </div>
+                          <div className="font-mono font-semibold tabular">
+                            {formatTime(bestEvent[1] ?? NaN)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-4 mt-3">
+                      <Stat label="Points" value={pts.total} tone="accent" />
+                      <Stat label="Streak" value={`${streak}d`} tone="warning" />
+                      <Stat label="This Week" value={`${miles.toFixed(1)} mi`} tone="success" />
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </CardSection>
+      )}
+
+      <CardSection title="Quick Actions">
+        <div className="grid grid-cols-2 gap-2">
+          <QuickAction href="/log/new" label="Log a run" tone="training" />
+          <QuickAction href="/checkin/morning" label="Morning check-in" tone="insights" />
+          <QuickAction href="/checkin/evening" label="Evening check-in" tone="goals" />
+          <QuickAction href="/goals/new" label="Set a goal" tone="rewards" />
         </div>
-      </header>
+      </CardSection>
 
-      <DataControls resultCount={results.length} onLoad={handleLoad} onClear={handleClear} />
+      <CardSection title="Explore">
+        <div className="grid grid-cols-2 gap-2">
+          <QuickAction href="/rankings" label="Rankings" tone="racing" />
+          <QuickAction href="/stats" label="Trends" tone="insights" />
+          <QuickAction href="/simulator" label="State Sim" tone="goals" />
+          <QuickAction href="/parent" label="Parent" tone="rewards" />
+        </div>
+      </CardSection>
+    </>
+  );
+}
 
-      <Filters
-        event={event}
-        gender={gender}
-        classification={classification}
-        onChangeEvent={setEvent}
-        onChangeGender={setGender}
-        onChangeClassification={setClassification}
-      />
-
-      <RankingsTable
-        results={results}
-        event={event}
-        gender={gender}
-        classification={classification}
-        starred={starred}
-        onToggleStar={toggleStar}
-      />
-
-      <footer className="mt-auto pt-8 text-center text-xs text-neutral-600">
-        Data stays on your device (localStorage). Phase 1 MVP.
-      </footer>
-    </main>
+function QuickAction({
+  href,
+  label,
+  tone,
+}: {
+  href: string;
+  label: string;
+  tone: "training" | "racing" | "goals" | "insights" | "rewards";
+}) {
+  return (
+    <Link href={href}>
+      <Card className="h-full flex flex-col justify-between gap-3">
+        <Chip tone={tone}>&nbsp;</Chip>
+        <div className="font-semibold">{label}</div>
+      </Card>
+    </Link>
   );
 }

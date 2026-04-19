@@ -28,18 +28,17 @@ export function Filters({
 }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
+      <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-1 px-1 snap-x">
         {EVENTS.map((e) => (
           <button
             key={e}
             type="button"
             onClick={() => onChangeEvent(e)}
-            className={[
-              "px-3 py-1.5 rounded-full text-sm whitespace-nowrap snap-start transition-colors border",
+            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap snap-start border ${
               event === e
-                ? "bg-sky-500 border-sky-400 text-white"
-                : "bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700",
-            ].join(" ")}
+                ? "bg-accent border-accent text-white"
+                : "bg-card border-card-border text-muted hover:text-foreground"
+            }`}
           >
             {e}
           </button>
@@ -47,36 +46,32 @@ export function Filters({
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <div className="flex rounded-lg overflow-hidden border border-neutral-800">
+        <div className="flex rounded-lg overflow-hidden border border-card-border bg-card">
           {GENDERS.map((g) => (
             <button
               key={g}
               type="button"
               onClick={() => onChangeGender(g)}
-              className={[
-                "px-3 py-1.5 text-sm",
-                gender === g
-                  ? "bg-neutral-100 text-neutral-900 font-semibold"
-                  : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800",
-              ].join(" ")}
+              className={`px-3 py-1.5 text-sm ${
+                gender === g ? "bg-foreground text-background font-semibold" : "text-muted"
+              }`}
             >
               {g === "M" ? "Boys" : "Girls"}
             </button>
           ))}
         </div>
 
-        <div className="flex rounded-lg overflow-hidden border border-neutral-800">
+        <div className="flex rounded-lg overflow-hidden border border-card-border bg-card">
           {CLASSIFICATIONS.map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => onChangeClassification(c)}
-              className={[
-                "px-3 py-1.5 text-sm",
+              className={`px-3 py-1.5 text-sm ${
                 classification === c
-                  ? "bg-neutral-100 text-neutral-900 font-semibold"
-                  : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800",
-              ].join(" ")}
+                  ? "bg-foreground text-background font-semibold"
+                  : "text-muted"
+              }`}
             >
               {c}
             </button>
