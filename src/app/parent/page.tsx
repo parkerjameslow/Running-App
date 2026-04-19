@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { AthletePicker } from "@/components/AthletePicker";
 import { useStore, uid, today } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { pointsFor, runStreak, weeklyMiles } from "@/lib/gamification";
 
 export default function ParentPage() {
   const { data, update } = useStore();
-  const athletes = useMemo(() => athletesFromResults(data.results), [data.results]);
+  const athletes = useMemo(() => allAthletes(data), [data.results]);
   const starred = athletes.filter((a) => data.starred.includes(a.key));
   const kids = starred.length > 0 ? starred : athletes.slice(0, 5);
 

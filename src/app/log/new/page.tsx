@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { AthletePicker } from "@/components/AthletePicker";
 import { useStore, uid, today } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { POINTS } from "@/lib/gamification";
 import { RUN_TYPES, type RunType } from "@/lib/types";
 
@@ -23,10 +23,13 @@ function NewLogForm() {
   const router = useRouter();
   const sp = useSearchParams();
   const { data, update } = useStore();
-  const athletes = useMemo(() => athletesFromResults(data.results), [data.results]);
+  const athletes = useMemo(() => allAthletes(data), [data.results]);
 
-  const initialKey = sp.get("athlete") ?? athletes[0]?.key ?? "";
+  const initialKey =
+    data.activeAthleteKey ?? sp.get("athlete") ?? athletes[0]?.key ?? "";
   const [athleteKey, setAthleteKey] = useState(initialKey);
+  const lockedAthlete = !!data.activeAthleteKey;
+  const currentAthlete = athletes.find((a) => a.key === athleteKey);
   const [date, setDate] = useState(today());
   const [distance, setDistance] = useState("");
   const [minutes, setMinutes] = useState("");
@@ -80,11 +83,17 @@ function NewLogForm() {
       <PageHeader title="Log a Run" subtitle={`+${POINTS.logRun} points`} />
 
       <Card className="flex flex-col gap-3">
-        <Label>Athlete</Label>
-        <AthletePicker
-          value={athleteKey}
-          onChange={(k) => setAthleteKey(k)}
-        />
+        {lockedAthlete ? (
+          <div className="text-sm">
+            <span className="text-muted">For </span>
+            <span className="font-semibold">{currentAthlete?.name ?? "you"}</span>
+          </div>
+        ) : (
+          <>
+            <Label>Athlete</Label>
+            <AthletePicker value={athleteKey} onChange={(k) => setAthleteKey(k)} />
+          </>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div>

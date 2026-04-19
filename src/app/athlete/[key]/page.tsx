@@ -8,7 +8,7 @@ import { Card, CardSection, Stat } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { useStore } from "@/lib/store";
-import { athletesFromResults, resultsForAthlete } from "@/lib/athletes";
+import { allAthletes, resultsForAthlete } from "@/lib/athletes";
 import { computeBadgesFor, pointsFor, runStreak, weeklyMiles } from "@/lib/gamification";
 import { formatTime } from "@/lib/time";
 
@@ -18,7 +18,7 @@ export default function AthletePage() {
   const { data, update, hydrated } = useStore();
 
   const athlete = useMemo(
-    () => athletesFromResults(data.results).find((a) => a.key === key),
+    () => allAthletes(data).find((a) => a.key === key),
     [data.results, key]
   );
 

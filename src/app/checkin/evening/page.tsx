@@ -7,14 +7,18 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { AthletePicker } from "@/components/AthletePicker";
 import { useStore, uid, today } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { POINTS } from "@/lib/gamification";
 
 export default function EveningCheckinPage() {
   const router = useRouter();
   const { data, update } = useStore();
-  const athletes = useMemo(() => athletesFromResults(data.results), [data.results]);
-  const [athleteKey, setAthleteKey] = useState(athletes[0]?.key ?? "");
+  const athletes = useMemo(() => allAthletes(data), [data.results]);
+  const [athleteKey, setAthleteKey] = useState(
+    data.activeAthleteKey ?? athletes[0]?.key ?? ""
+  );
+  const lockedAthlete = !!data.activeAthleteKey;
+  const currentAthlete = athletes.find((a) => a.key === athleteKey);
   const [bedtime, setBedtime] = useState("");
   const [nutrition, setNutrition] = useState(4);
   const [waterCups, setWaterCups] = useState(8);
@@ -60,12 +64,19 @@ export default function EveningCheckinPage() {
       <PageHeader title="Evening Check-In" subtitle={`+${POINTS.eveningCheckin} points`} />
 
       <Card className="flex flex-col gap-4">
-        <div>
-          <label className="text-xs text-muted">Athlete</label>
-          <div className="mt-1">
-            <AthletePicker value={athleteKey} onChange={(k) => setAthleteKey(k)} />
+        {lockedAthlete ? (
+          <div className="text-sm">
+            <span className="text-muted">For </span>
+            <span className="font-semibold">{currentAthlete?.name ?? "you"}</span>
           </div>
-        </div>
+        ) : (
+          <div>
+            <label className="text-xs text-muted">Athlete</label>
+            <div className="mt-1">
+              <AthletePicker value={athleteKey} onChange={(k) => setAthleteKey(k)} />
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="text-xs text-muted">Planned bedtime</label>

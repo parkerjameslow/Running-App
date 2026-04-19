@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 
 interface Props {
   value?: string;
@@ -13,7 +13,7 @@ interface Props {
 export function AthletePicker({ value, onChange, placeholder = "Select athlete" }: Props) {
   const { data } = useStore();
   const athletes = useMemo(() => {
-    const all = athletesFromResults(data.results);
+    const all = allAthletes(data);
     // starred first
     return [...all].sort((a, b) => {
       const aStar = data.starred.includes(a.key) ? 0 : 1;

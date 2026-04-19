@@ -1,4 +1,4 @@
-import type { AppData, RaceResult } from "./types";
+import type { AppData, Athlete, RaceResult } from "./types";
 import { athleteKey } from "./storage";
 
 export interface AthleteSummary {
@@ -13,8 +13,25 @@ export interface AthleteSummary {
   lastRaceDate?: string;
 }
 
-export function athletesFromResults(results: RaceResult[]): AthleteSummary[] {
+export function athletesFromResults(
+  results: RaceResult[],
+  extras: Athlete[] = []
+): AthleteSummary[] {
   const map = new Map<string, AthleteSummary>();
+
+  // Seed with manually-added athletes so they appear even without race data.
+  for (const a of extras) {
+    map.set(a.key, {
+      key: a.key,
+      name: a.name,
+      school: a.school,
+      gender: a.gender,
+      classification: a.classification,
+      raceCount: 0,
+      events: [],
+      bestTimes: {},
+    });
+  }
 
   for (const r of results) {
     const key = athleteKey(r.athleteName, r.school);
@@ -45,8 +62,12 @@ export function athletesFromResults(results: RaceResult[]): AthleteSummary[] {
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export function allAthletes(data: AppData): AthleteSummary[] {
+  return athletesFromResults(data.results, data.athletes);
+}
+
 export function findAthlete(data: AppData, key: string): AthleteSummary | undefined {
-  return athletesFromResults(data.results).find((a) => a.key === key);
+  return allAthletes(data).find((a) => a.key === key);
 }
 
 export function resultsForAthlete(results: RaceResult[], key: string): RaceResult[] {

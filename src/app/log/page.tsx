@@ -6,12 +6,12 @@ import { Card, CardSection, Stat } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { useStore } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { runStreak, weeklyMiles } from "@/lib/gamification";
 
 export default function LogPage() {
   const { data } = useStore();
-  const athletes = athletesFromResults(data.results);
+  const athletes = allAthletes(data);
   const starredAthletes = athletes.filter((a) => data.starred.includes(a.key));
   const displayed = starredAthletes.length > 0 ? starredAthletes : athletes.slice(0, 5);
 

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { AthletePicker } from "@/components/AthletePicker";
 import { useStore, uid, today } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { bestTimesForFilter, projectedRank } from "@/lib/rankings";
 import { formatTime, parseTime } from "@/lib/time";
 import {
@@ -29,9 +29,11 @@ function NewGoalForm() {
   const sp = useSearchParams();
   const { data, update } = useStore();
 
-  const athletes = useMemo(() => athletesFromResults(data.results), [data.results]);
-  const initialKey = sp.get("athlete") ?? athletes[0]?.key ?? "";
+  const athletes = useMemo(() => allAthletes(data), [data.results]);
+  const initialKey =
+    data.activeAthleteKey ?? sp.get("athlete") ?? athletes[0]?.key ?? "";
   const initialAthlete = athletes.find((a) => a.key === initialKey);
+  const lockedAthlete = !!data.activeAthleteKey;
 
   const [athleteKey, setAthleteKey] = useState(initialKey);
   const [athleteName, setAthleteName] = useState(initialAthlete?.name ?? "");
@@ -84,15 +86,24 @@ function NewGoalForm() {
       <PageHeader title="New Goal" subtitle="See your projected rank in real time" />
 
       <Card className="flex flex-col gap-3">
-        <label className="text-xs text-muted">Athlete</label>
-        <AthletePicker
-          value={athleteKey}
-          onChange={(k, name, sch) => {
-            setAthleteKey(k);
-            setAthleteName(name);
-            setSchool(sch);
-          }}
-        />
+        {lockedAthlete ? (
+          <div className="text-sm">
+            <span className="text-muted">For </span>
+            <span className="font-semibold">{athleteName || "you"}</span>
+          </div>
+        ) : (
+          <>
+            <label className="text-xs text-muted">Athlete</label>
+            <AthletePicker
+              value={athleteKey}
+              onChange={(k, name, sch) => {
+                setAthleteKey(k);
+                setAthleteName(name);
+                setSchool(sch);
+              }}
+            />
+          </>
+        )}
 
         <label className="text-xs text-muted mt-2">Event</label>
         <select

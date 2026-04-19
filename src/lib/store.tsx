@@ -16,6 +16,7 @@ const STORAGE_KEY = "running-stats:v2";
 const DEFAULT_DATA: AppData = {
   results: [],
   starred: [],
+  athletes: [],
   goals: [],
   trainingLogs: [],
   morningCheckins: [],
@@ -23,6 +24,7 @@ const DEFAULT_DATA: AppData = {
   badges: [],
   rewards: [],
   points: [],
+  userRole: null,
   isParent: false,
 };
 

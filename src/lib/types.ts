@@ -114,9 +114,21 @@ export interface PointsLedger {
   createdAt: string;
 }
 
+export interface Athlete {
+  key: string;
+  name: string;
+  school: string;
+  gender: Gender;
+  classification: Classification;
+  createdAt: string;
+}
+
+export type UserRole = "athlete" | "parent" | null;
+
 export interface AppData {
   results: RaceResult[];
   starred: string[]; // athlete keys
+  athletes: Athlete[]; // manually-added athlete profiles (setup-created)
   goals: Goal[];
   trainingLogs: TrainingLog[];
   morningCheckins: MorningCheckin[];
@@ -124,8 +136,9 @@ export interface AppData {
   badges: Badge[];
   rewards: Reward[];
   points: PointsLedger[];
-  activeAthleteKey?: string; // whose log / check-in we're viewing
-  isParent: boolean;
+  activeAthleteKey?: string; // which athlete this device identifies as
+  userRole: UserRole; // "athlete" = this device IS a kid, "parent" = viewing everyone, null = not setup
+  isParent: boolean; // legacy, mirrored from userRole === "parent"
 }
 
 export const STATE_FIELD_SIZE = 27;

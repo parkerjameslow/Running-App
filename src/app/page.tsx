@@ -6,22 +6,82 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardSection, Stat } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { pointsFor, runStreak, weeklyMiles } from "@/lib/gamification";
 import { formatTime } from "@/lib/time";
 
 export default function HomePage() {
   const { data } = useStore();
-  const athletes = athletesFromResults(data.results);
-  const starredAthletes = athletes.filter((a) => data.starred.includes(a.key));
+  const athletes = allAthletes(data);
+  const activeAthlete = data.activeAthleteKey
+    ? athletes.find((a) => a.key === data.activeAthleteKey)
+    : null;
+  const starredAthletes = athletes.filter(
+    (a) => data.starred.includes(a.key) && a.key !== data.activeAthleteKey
+  );
   const hasData = data.results.length > 0;
 
   return (
     <>
       <PageHeader
-        title="Running Stats"
-        subtitle={hasData ? `${athletes.length} athletes tracked` : "Get started"}
+        title={activeAthlete ? `Hi, ${activeAthlete.name.split(" ")[0]}` : "Running Stats"}
+        subtitle={
+          activeAthlete
+            ? `${activeAthlete.school} · ${activeAthlete.classification} ${
+                activeAthlete.gender === "M" ? "Boys" : "Girls"
+              }`
+            : hasData
+            ? `${athletes.length} athletes tracked`
+            : "Get started"
+        }
       />
+
+      {activeAthlete && (
+        <Link href={`/athlete/${encodeURIComponent(activeAthlete.key)}`}>
+          <Card className="border-accent/40 bg-accent/5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="text-xs uppercase tracking-wide text-accent">
+                  Your stats
+                </div>
+                <div className="font-semibold truncate">{activeAthlete.name}</div>
+              </div>
+              {(() => {
+                const best = Object.entries(activeAthlete.bestTimes).sort(
+                  ([, a], [, b]) => (a ?? 0) - (b ?? 0)
+                )[0];
+                return best ? (
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase text-muted tracking-wide">
+                      {best[0]} PR
+                    </div>
+                    <div className="font-mono font-semibold tabular">
+                      {formatTime(best[1] ?? NaN)}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+            <div className="flex gap-4 mt-3">
+              <Stat
+                label="Points"
+                value={pointsFor(data, activeAthlete.key).total}
+                tone="accent"
+              />
+              <Stat
+                label="Streak"
+                value={`${runStreak(data.trainingLogs, activeAthlete.key)}d`}
+                tone="warning"
+              />
+              <Stat
+                label="Week"
+                value={`${weeklyMiles(data.trainingLogs, activeAthlete.key).toFixed(1)} mi`}
+                tone="success"
+              />
+            </div>
+          </Card>
+        </Link>
+      )}
 
       {!hasData && (
         <Card className="flex flex-col gap-3">
@@ -40,7 +100,7 @@ export default function HomePage() {
       )}
 
       {starredAthletes.length > 0 && (
-        <CardSection title="Your Athletes">
+        <CardSection title={activeAthlete ? "Also Tracking" : "Your Athletes"}>
           <div className="flex flex-col gap-2">
             {starredAthletes.map((a) => {
               const pts = pointsFor(data, a.key);

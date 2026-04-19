@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardSection } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { DataControls } from "@/components/DataControls";
 import { useStore } from "@/lib/store";
+import { allAthletes } from "@/lib/athletes";
 
 const LINKS: { href: string; label: string; tone: "training" | "racing" | "goals" | "insights" | "rewards" }[] = [
   { href: "/goals", label: "Goals", tone: "goals" },
@@ -16,11 +18,52 @@ const LINKS: { href: string; label: string; tone: "training" | "racing" | "goals
 ];
 
 export default function MorePage() {
-  const { data, reset } = useStore();
+  const router = useRouter();
+  const { data, update, reset } = useStore();
+  const athletes = allAthletes(data);
+  const current = data.activeAthleteKey
+    ? athletes.find((a) => a.key === data.activeAthleteKey)
+    : null;
+
+  function switchUser() {
+    update((prev) => ({
+      ...prev,
+      userRole: null,
+      activeAthleteKey: undefined,
+      isParent: false,
+    }));
+    router.push("/setup");
+  }
 
   return (
     <>
       <PageHeader title="More" />
+
+      <CardSection title="Profile">
+        <Card className="flex items-center justify-between">
+          <div className="min-w-0">
+            <div className="font-semibold">
+              {current
+                ? current.name
+                : data.userRole === "parent"
+                ? "Parent / Coach"
+                : "Not set up"}
+            </div>
+            <div className="text-xs text-muted truncate">
+              {current
+                ? `${current.school} · ${current.classification} · ${
+                    current.gender === "M" ? "Boys" : "Girls"
+                  }`
+                : data.userRole === "parent"
+                ? "You see all athletes"
+                : ""}
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" onClick={switchUser}>
+            Switch
+          </Button>
+        </Card>
+      </CardSection>
 
       <CardSection title="Features">
         <div className="grid grid-cols-2 gap-2">

@@ -7,13 +7,13 @@ import { Chip } from "@/components/ui/Chip";
 import { MiniBarChart } from "@/components/MiniBarChart";
 import { AthletePicker } from "@/components/AthletePicker";
 import { useStore } from "@/lib/store";
-import { athletesFromResults } from "@/lib/athletes";
+import { allAthletes } from "@/lib/athletes";
 import { computeBadgesFor, pointsFor, runStreak, weeklyMiles } from "@/lib/gamification";
 import { dailyMileage, insightsFor, moodTrend } from "@/lib/insights";
 
 export default function StatsPage() {
   const { data } = useStore();
-  const athletes = useMemo(() => athletesFromResults(data.results), [data.results]);
+  const athletes = useMemo(() => allAthletes(data), [data.results]);
   const defaultKey = data.starred.find((k) => athletes.some((a) => a.key === k)) ?? athletes[0]?.key ?? "";
   const [athleteKey, setAthleteKey] = useState(defaultKey);
 
